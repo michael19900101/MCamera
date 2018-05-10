@@ -11,14 +11,12 @@ import com.michael.mcamera.camera.CameraInterface;
 
 
 public class CameraSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
-	private static final String TAG = "yanzi";
-	CameraInterface mCameraInterface;
-	Context mContext;
-	SurfaceHolder mSurfaceHolder;
+	private static final String TAG = "CameraSurfaceView";
+    private SurfaceHolder mSurfaceHolder;
+
 	public CameraSurfaceView(Context context, AttributeSet attrs) {
 		super(context, attrs);
 		// TODO Auto-generated constructor stub
-		mContext = context;
 		mSurfaceHolder = getHolder();
 		mSurfaceHolder.setFormat(PixelFormat.TRANSPARENT);//translucent°ëÍ¸Ã÷ transparentÍ¸Ã÷
 		mSurfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);

@@ -5,9 +5,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PixelFormat;
 import android.hardware.Camera;
-import android.hardware.Camera.PictureCallback;
-import android.hardware.Camera.ShutterCallback;
-import android.hardware.Camera.Size;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.SurfaceHolder;
@@ -22,167 +19,172 @@ import java.io.IOException;
 import java.util.List;
 
 public class CameraInterface {
-	private static final String TAG = "yanzi";
-	private Camera mCamera;
-	private Camera.Parameters mParams;
-	private boolean isPreviewing = false;
-	private float mPreviwRate = -1f;
-	private static CameraInterface mCameraInterface;
-	private ThumbnailInterace thumbnailInterace;
-	private Context context;
+    private static final String TAG = "CameraInterface";
+    private Camera mCamera;
+    private Camera.Parameters mParams;
+    private boolean isPreviewing = false;
+    private float mPreviwRate = -1f;
+    private static CameraInterface mCameraInterface;
+    private ThumbnailInterace thumbnailInterace;
+    private Context context;
 
-	public void setThumbnailInterace(ThumbnailInterace thumbnailInterace) {
-		this.thumbnailInterace = thumbnailInterace;
-	}
+    public void setThumbnailInterace(ThumbnailInterace thumbnailInterace) {
+        this.thumbnailInterace = thumbnailInterace;
+    }
 
-	public interface CamOpenOverCallback{
-		public void cameraHasOpened();
-	}
+    public interface CamOpenOverCallback{
+        void cameraHasOpened();
+    }
 
-	private CameraInterface(){
+    private CameraInterface(){
 
-	}
-	public static synchronized CameraInterface getInstance(){
-		if(mCameraInterface == null){
-			mCameraInterface = new CameraInterface();
-		}
-		return mCameraInterface;
-	}
-	/**´ò¿ªCamera
-	 * @param callback
-	 */
-	public void doOpenCamera(CamOpenOverCallback callback){
-		Log.i(TAG, "Camera open....");
-		mCamera = Camera.open();
-		Log.i(TAG, "Camera open over....");
-		callback.cameraHasOpened();
-	}
-	/**¿ªÆôÔ¤ÀÀ
-	 * @param holder
-	 * @param previewRate
-	 */
-	public void doStartPreview(SurfaceHolder holder, float previewRate){
-		Log.i(TAG, "doStartPreview...");
-		if(isPreviewing){
-			mCamera.stopPreview();
-			return;
-		}
-		if(mCamera != null){
+    }
+    public static synchronized CameraInterface getInstance(){
+        if(mCameraInterface == null){
+            mCameraInterface = new CameraInterface();
+        }
+        return mCameraInterface;
+    }
 
-			mParams = mCamera.getParameters();
-			mParams.setPictureFormat(PixelFormat.JPEG);//ÉèÖÃÅÄÕÕºó´æ´¢µÄÍ¼Æ¬¸ñÊ½
-			CamParaUtil.getInstance().printSupportPictureSize(mParams);
-			CamParaUtil.getInstance().printSupportPreviewSize(mParams);
-			//ÉèÖÃPreviewSizeºÍPictureSize
-			Size pictureSize = CamParaUtil.getInstance().getPropPictureSize(
-					mParams.getSupportedPictureSizes(),previewRate, 800);
-			mParams.setPictureSize(pictureSize.width, pictureSize.height);
-			Size previewSize = CamParaUtil.getInstance().getPropPreviewSize(
-					mParams.getSupportedPreviewSizes(), previewRate, 800);
-			mParams.setPreviewSize(previewSize.width, previewSize.height);
+    /**æ‰“å¼€ç›¸æœº
+     * @param callback
+     */
+    public void doOpenCamera(CameraInterface.CamOpenOverCallback callback){
+        Log.i(TAG, "Camera open....");
+        mCamera = Camera.open();
+        Log.i(TAG, "Camera open over....");
+        callback.cameraHasOpened();
+    }
 
-			mCamera.setDisplayOrientation(90);
+    /**å¼€å¯é¢„è§ˆ
+     * @param holder
+     * @param previewRate
+     */
+    public void doStartPreview(SurfaceHolder holder, float previewRate){
+        Log.i(TAG, "doStartPreview...");
+        if(isPreviewing){
+            mCamera.stopPreview();
+            return;
+        }
+        if(mCamera != null){
 
-			CamParaUtil.getInstance().printSupportFocusMode(mParams);
-			List<String> focusModes = mParams.getSupportedFocusModes();
-			if(focusModes.contains("continuous-video")){
-				mParams.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
-			}
-			mCamera.setParameters(mParams);	
+            mParams = mCamera.getParameters();
+            // è®¾ç½®æ‹ç…§åå‚¨å­˜çš„å›¾ç‰‡æ ¼å¼
+            mParams.setPictureFormat(PixelFormat.JPEG);
+            CamParaUtil.getInstance().printSupportPictureSize(mParams);
+            CamParaUtil.getInstance().printSupportPreviewSize(mParams);
+            // è®¾ç½®previewSizeå’ŒpictureSize
+            Camera.Size pictureSize = CamParaUtil.getInstance().getPropPictureSize(
+                    mParams.getSupportedPictureSizes(),previewRate, 800);
+            mParams.setPictureSize(pictureSize.width, pictureSize.height);
+            Camera.Size previewSize = CamParaUtil.getInstance().getPropPreviewSize(
+                    mParams.getSupportedPreviewSizes(), previewRate, 800);
+            mParams.setPreviewSize(previewSize.width, previewSize.height);
 
-			try {
-				mCamera.setPreviewDisplay(holder);
-				mCamera.startPreview();//¿ªÆôÔ¤ÀÀ
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+            mCamera.setDisplayOrientation(180);
 
-			isPreviewing = true;
-			mPreviwRate = previewRate;
+            CamParaUtil.getInstance().printSupportFocusMode(mParams);
+            List<String> focusModes = mParams.getSupportedFocusModes();
+            if(focusModes.contains("continuous-video")){
+                mParams.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_VIDEO);
+            }
+            mCamera.setParameters(mParams);
 
-			mParams = mCamera.getParameters(); //ÖØĞÂgetÒ»´Î
-			Log.i(TAG, "×îÖÕÉèÖÃ:PreviewSize--With = " + mParams.getPreviewSize().width
-					+ "Height = " + mParams.getPreviewSize().height);
-			Log.i(TAG, "×îÖÕÉèÖÃ:PictureSize--With = " + mParams.getPictureSize().width
-					+ "Height = " + mParams.getPictureSize().height);
-		}
-	}
-	/**
-	 * Í£Ö¹Ô¤ÀÀ£¬ÊÍ·ÅCamera
-	 */
-	public void doStopCamera(){
-		if(null != mCamera)
-		{
-			mCamera.setPreviewCallback(null);
-			mCamera.stopPreview(); 
-			isPreviewing = false; 
-			mPreviwRate = -1f;
-			mCamera.release();
-			mCamera = null;     
-		}
-	}
-	/**
-	 * ÅÄÕÕ
-	 */
-	public void doTakePicture(Context context){
-		this.context = context;
-		if(isPreviewing && (mCamera != null)){
-			mCamera.takePicture(mShutterCallback, null, mJpegPictureCallback);
-		}
-	}
+            try {
+                mCamera.setPreviewDisplay(holder);
+                // å¼€å¯é¢„è§ˆ
+                mCamera.startPreview();
+            } catch (IOException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
-	/*ÎªÁËÊµÏÖÅÄÕÕµÄ¿ìÃÅÉùÒô¼°ÅÄÕÕ±£´æÕÕÆ¬ĞèÒªÏÂÃæÈı¸ö»Øµ÷±äÁ¿*/
-	ShutterCallback mShutterCallback = new ShutterCallback() 
-	//¿ìÃÅ°´ÏÂµÄ»Øµ÷£¬ÔÚÕâÀïÎÒÃÇ¿ÉÒÔÉèÖÃÀàËÆ²¥·Å¡°ßÇàê¡±ÉùÖ®ÀàµÄ²Ù×÷¡£Ä¬ÈÏµÄ¾ÍÊÇßÇàê¡£
-	{
-		public void onShutter() {
-			// TODO Auto-generated method stub
-			Log.i(TAG, "myShutterCallback:onShutter...");
-		}
-	};
-	PictureCallback mRawCallback = new PictureCallback() 
-	// ÅÄÉãµÄÎ´Ñ¹ËõÔ­Êı¾İµÄ»Øµ÷,¿ÉÒÔÎªnull
-	{
+            isPreviewing = true;
+            mPreviwRate = previewRate;
 
-		public void onPictureTaken(byte[] data, Camera camera) {
-			// TODO Auto-generated method stub
-			Log.i(TAG, "myRawCallback:onPictureTaken...");
+            mParams = mCamera.getParameters(); //é‡æ–°getä¸€æ¬¡
+            Log.i(TAG, "æœ€ç»ˆè®¾ç½®:PreviewSize--With = " + mParams.getPreviewSize().width
+                    + "Height = " + mParams.getPreviewSize().height);
+            Log.i(TAG, "æœ€ç»ˆè®¾ç½®:PictureSize--With = " + mParams.getPictureSize().width
+                    + "Height = " + mParams.getPictureSize().height);
+        }
+    }
+    /**
+     * åœæ­¢é¢„è§ˆï¼Œé‡Šæ”¾Camera
+     */
+    public void doStopCamera(){
+        if(null != mCamera)
+        {
+            mCamera.setPreviewCallback(null);
+            mCamera.stopPreview();
+            isPreviewing = false;
+            mPreviwRate = -1f;
+            mCamera.release();
+            mCamera = null;
+        }
+    }
+    /**
+     * æ‹ç…§
+     */
+    public void doTakePicture(Context context){
+        this.context = context;
+        if(isPreviewing && (mCamera != null)){
+            mCamera.takePicture(mShutterCallback, null, mJpegPictureCallback);
+        }
+    }
 
-		}
-	};
-	PictureCallback mJpegPictureCallback = new PictureCallback() 
-	//¶ÔjpegÍ¼ÏñÊı¾İµÄ»Øµ÷,×îÖØÒªµÄÒ»¸ö»Øµ÷
-	{
-		public void onPictureTaken(byte[] data, Camera camera) {
-			// TODO Auto-generated method stub
-			Log.i(TAG, "myJpegCallback:onPictureTaken...");
-			Bitmap b = null;
-			if(null != data){
-				b = BitmapFactory.decodeByteArray(data, 0, data.length);//dataÊÇ×Ö½ÚÊı¾İ£¬½«Æä½âÎö³ÉÎ»Í¼
-				mCamera.stopPreview();
-				isPreviewing = false;
-			}
-			//±£´æÍ¼Æ¬µ½sdcard
-			if(null != b){
-				//ÉèÖÃFOCUS_MODE_CONTINUOUS_VIDEO)Ö®ºó£¬myParam.set("rotation", 90)Ê§Ğ§¡£
-				//Í¼Æ¬¾¹È»²»ÄÜĞı×ªÁË£¬¹ÊÕâÀïÒªĞı×ªÏÂ
-				Bitmap rotaBitmap = ImageUtil.getRotateBitmap(b, 90.0f);
-				String jpegName = FileUtil.saveBitmap(rotaBitmap);
-				if(!TextUtils.isEmpty(jpegName)){
-					int width = DisplayUtil.dip2px(context,50);
-					int height = DisplayUtil.dip2px(context,50);
-					Bitmap thumbnailBitmap = ImageUtil.getImageThumbnail(jpegName, width, height);
-					if(thumbnailInterace != null){
-						thumbnailInterace.getThumbnail(thumbnailBitmap);
-					}
-				}
-			}
-			//ÔÙ´Î½øÈëÔ¤ÀÀ
-			mCamera.startPreview();
-			isPreviewing = true;
-		}
-	};
+    /*ä¸ºäº†å®ç°æ‹ç…§çš„å¿«é—¨å£°éŸ³åŠæ‹ç…§ä¿å­˜ç…§ç‰‡éœ€è¦ä¸‹é¢ä¸‰ä¸ªå›è°ƒå˜é‡*/
+    Camera.ShutterCallback mShutterCallback = new Camera.ShutterCallback()
+            //å¿«é—¨æŒ‰ä¸‹çš„å›è°ƒï¼Œåœ¨è¿™é‡Œæˆ‘ä»¬å¯ä»¥è®¾ç½®ç±»ä¼¼æ’­æ”¾â€œå’”åš“â€å£°ä¹‹ç±»çš„æ“ä½œã€‚é»˜è®¤çš„å°±æ˜¯å’”åš“ã€‚
+    {
+        public void onShutter() {
+            // TODO Auto-generated method stub
+            Log.i(TAG, "myShutterCallback:onShutter...");
+        }
+    };
+    Camera.PictureCallback mRawCallback = new Camera.PictureCallback()
+            // æ‹æ‘„çš„æœªå‹ç¼©åŸæ•°æ®çš„å›è°ƒ,å¯ä»¥ä¸ºnull
+    {
+
+        public void onPictureTaken(byte[] data, Camera camera) {
+            // TODO Auto-generated method stub
+            Log.i(TAG, "myRawCallback:onPictureTaken...");
+
+        }
+    };
+    Camera.PictureCallback mJpegPictureCallback = new Camera.PictureCallback()
+            //å¯¹jpegå›¾åƒæ•°æ®çš„å›è°ƒ,æœ€é‡è¦çš„ä¸€ä¸ªå›è°ƒ
+    {
+        public void onPictureTaken(byte[] data, Camera camera) {
+            // TODO Auto-generated method stub
+            Log.i(TAG, "myJpegCallback:onPictureTaken...");
+            Bitmap b = null;
+            if(null != data){
+                b = BitmapFactory.decodeByteArray(data, 0, data.length);//dataæ˜¯å­—èŠ‚æ•°æ®ï¼Œå°†å…¶è§£ææˆä½å›¾
+                mCamera.stopPreview();
+                isPreviewing = false;
+            }
+            //ä¿å­˜å›¾ç‰‡åˆ°sdcard
+            if(null != b){
+                //è®¾ç½®FOCUS_MODE_CONTINUOUS_VIDEO)ä¹‹åï¼ŒmyParam.set("rotation", 90)å¤±æ•ˆã€‚
+                //å›¾ç‰‡ç«Ÿç„¶ä¸èƒ½æ—‹è½¬äº†ï¼Œæ•…è¿™é‡Œè¦æ—‹è½¬ä¸‹
+                Bitmap rotaBitmap = ImageUtil.getRotateBitmap(b, 90.0f);
+                String jpegName = FileUtil.saveBitmap(rotaBitmap);
+                if(!TextUtils.isEmpty(jpegName)){
+                    int width = DisplayUtil.dip2px(context,50);
+                    int height = DisplayUtil.dip2px(context,50);
+                    // ç”Ÿæˆç¼©ç•¥å›¾
+                    Bitmap thumbnailBitmap = ImageUtil.getImageThumbnail(jpegName, width, height);
+                    if(thumbnailInterace != null){
+                        thumbnailInterace.getThumbnail(thumbnailBitmap);
+                    }
+                }
+            }
+            //å†æ¬¡è¿›å…¥é¢„è§ˆ
+            mCamera.startPreview();
+            isPreviewing = true;
+        }
+    };
 
 
 }

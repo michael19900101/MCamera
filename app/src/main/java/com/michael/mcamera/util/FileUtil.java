@@ -29,7 +29,7 @@ public class FileUtil {
 		return storagePath;
 	}
 
-	/**保存Bitmap到sdcard
+	/**save Bitmap to sdcard
 	 * @param b
 	 */
 	public static String saveBitmap(Bitmap b){
@@ -44,10 +44,10 @@ public class FileUtil {
 			b.compress(Bitmap.CompressFormat.JPEG, 100, bos);
 			bos.flush();
 			bos.close();
-			Log.i(TAG, "saveBitmap成功");
+			Log.i(TAG, "saveBitmap success");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			Log.i(TAG, "saveBitmap:失败");
+			Log.i(TAG, "saveBitmap failed");
 			e.printStackTrace();
 			return "";
 		}

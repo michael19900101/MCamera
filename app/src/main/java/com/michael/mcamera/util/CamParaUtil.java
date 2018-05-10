@@ -9,7 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 
 public class CamParaUtil {
-	private static final String TAG = "yanzi";
+	private static final String TAG = "CamParaUtil";
 	private CameraSizeComparator sizeComparator = new CameraSizeComparator();
 	private static CamParaUtil myCamPara = null;
 	private CamParaUtil(){
